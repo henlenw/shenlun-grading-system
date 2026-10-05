@@ -1,0 +1,25 @@
+{
+  "name": "shenlun-platform",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.28.2",
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "dev": "node scripts/dev.mjs",
+    "dev:api": "pnpm --filter backend dev",
+    "dev:teacher": "pnpm --filter teacher-admin dev",
+    "db:generate": "pnpm --filter backend db:generate",
+    "db:migrate": "pnpm --filter backend db:migrate",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm --filter backend test",
+    "build": "pnpm --filter backend build && pnpm --filter teacher-admin build",
+    "test:ui": "pnpm --filter backend test:ui",
+    "preflight": "node scripts/preflight.mjs",
+    "start:worker": "node backend/dist/local-worker.js",
+    "release": "node scripts/prepare-release.mjs && node scripts/validate-release.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "prettier": "^3.9.9"
+  }
+}

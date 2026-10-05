@@ -1,0 +1,39 @@
+{
+  "name": "backend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "prisma generate",
+    "db:migrate": "node scripts/migrate.mjs",
+    "test": "tsx --test --test-concurrency=1 tests/*.test.ts",
+    "test:ui": "tsx scripts/ui-smoke.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1146.0",
+    "@fastify/cookie": "11.1.2",
+    "@fastify/helmet": "13.1.1",
+    "@fastify/multipart": "10.1.2",
+    "@fastify/rate-limit": "11.2.0",
+    "@prisma/client": "6.19.0",
+    "archiver": "^7.0.1",
+    "dotenv": "^17.2.3",
+    "fastify": "5.12.5",
+    "file-type": "^21.3.0",
+    "mammoth": "1.13.0",
+    "pdf-parse": "2.4.5",
+    "yauzl": "^3.2.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/archiver": "^6.0.3",
+    "@types/node": "^24.10.0",
+    "@types/yauzl": "^2.10.3",
+    "prisma": "6.19.0",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3"
+  }
+}

@@ -1,0 +1,86 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '3'
+services:
+  backend:
+    build:
+      context: .
+      target: backend
+    env_file: .env
+    environment:
+      HOST: 0.0.0.0
+      DATABASE_URL: file:/data/shenlun.db
+      STORAGE_PATH: /data/storage
+      BACKUP_PATH: /data/backups
+      OLLAMA_BASE_URL: http://ollama:11434
+      OCR_URL: http://ocr:8001
+    volumes:
+      - app_data:/data
+    ports:
+      - '127.0.0.1:4000:4000'
+    restart: unless-stopped
+    logging: *default-logging
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:4000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+  teacher:
+    logging: *default-logging
+    build:
+      context: .
+      target: teacher
+    environment:
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: '1'
+    ports:
+      - '127.0.0.1:3000:3000'
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+  ollama:
+    logging: *default-logging
+    image: ollama/ollama:latest
+    profiles: ['ai']
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+  ocr:
+    logging: *default-logging
+    build: ./ocr
+    profiles: ['ocr']
+    environment:
+      OCR_TOKEN: ${OCR_TOKEN}
+    volumes:
+      - ocr_models:/root/.paddlex
+    restart: unless-stopped
+  caddy:
+    logging: *default-logging
+    image: caddy:2
+    profiles: ['https']
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:-your-domain.example}
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [backend, teacher]
+    restart: unless-stopped
+volumes:
+  app_data:
+  ollama_data:
+  ocr_models:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,44 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/login/index",
+    "pages/assignments/index",
+    "pages/assignment-detail/index",
+    "pages/submit/index",
+    "pages/result/index",
+    "pages/profile/index",
+    "pages/privacy/index",
+    "pages/reference/index",
+    "pages/redeem/index",
+    "pages/original/index",
+    "pages/account/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "考吧167",
+    "navigationBarBackgroundColor": "#f4f6fa",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f4f6fa"
+  },
+  "tabBar": {
+    "color": "#7a8982",
+    "selectedColor": "#204b78",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/assignments/index",
+        "text": "题目"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

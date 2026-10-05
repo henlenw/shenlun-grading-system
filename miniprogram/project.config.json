@@ -1,0 +1,33 @@
+{
+  "description": "考吧167学生端",
+  "projectname": "shenlun-student",
+  "appid": "",
+  "compileType": "miniprogram",
+  "miniprogramRoot": "./",
+  "setting": {
+    "es6": true,
+    "enhance": true,
+    "minified": true,
+    "postcss": true,
+    "urlCheck": true,
+    "useCompilerPlugins": [
+      "typescript"
+    ]
+  },
+  "packOptions": {
+    "ignore": [
+      {
+        "type": "folder",
+        "value": "node_modules"
+      },
+      {
+        "type": "file",
+        "value": "package.json"
+      },
+      {
+        "type": "file",
+        "value": "tsconfig.json"
+      }
+    ]
+  }
+}

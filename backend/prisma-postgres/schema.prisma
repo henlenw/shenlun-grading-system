@@ -1,0 +1,392 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+model User {
+  id String @id @default(cuid())
+  username String? @unique
+  name String
+  role String
+  passwordHash String?
+  disabled Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lastLoginAt DateTime?
+  sessions Session[]
+  student StudentProfile? @relation("StudentUser")
+  teacher TeacherProfile?
+  assignedStudents StudentProfile[] @relation("Mentor")
+  identity WechatIdentity?
+  questions Question[]
+  assignments Assignment[]
+  recipients AssignmentRecipient[]
+  submissions Submission[]
+  reviews TeacherReview[]
+  notifications Notification[]
+  memberships ClassMember[]
+}
+model StudentProfile {
+  id String @id @default(cuid())
+  userId String @unique
+  user User @relation("StudentUser", fields:[userId], references:[id])
+  teacherId String
+  teacher User @relation("Mentor", fields:[teacherId], references:[id])
+  contact String @default("")
+  serviceType String @default("")
+  notes String @default("")
+  bindingHash String? @unique
+  bindingExpiresAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model TeacherProfile {
+  id String @id @default(cuid())
+  userId String @unique
+  user User @relation(fields:[userId], references:[id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model WechatIdentity {
+  id String @id @default(cuid())
+  openid String @unique
+  userId String @unique
+  user User @relation(fields:[userId], references:[id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model BindingTicket {
+  id String @id
+  openid String
+  attempts Int @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+model Session {
+  id String @id
+  userId String
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  csrfToken String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([expiresAt])
+}
+model Question {
+  id String @id @default(cuid())
+  teacherId String
+  teacher User @relation(fields:[teacherId], references:[id])
+  title String
+  type String
+  year Int?
+  region String @default("")
+  examType String @default("")
+  materials String
+  prompt String
+  requirements String
+  wordLimit Int
+  maxScore Int @default(100)
+  rubric String
+  referenceAnswer String @default("")
+  internalNote String @default("")
+  category String @default("专项训练")
+  teacherInstructions String @default("")
+  aiInstructions String @default("")
+  allowReference Boolean @default(true)
+  autoUnlockReference Boolean @default(true)
+  scoringPoints ScoringPoint[]
+  assignments Assignment[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model Assignment {
+  id String @id @default(cuid())
+  teacherId String
+  teacher User @relation(fields:[teacherId], references:[id])
+  questionId String
+  question Question @relation(fields:[questionId], references:[id])
+  title String
+  questionSnapshot String
+  dueAt DateTime
+  recipients AssignmentRecipient[]
+  submissions Submission[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model AssignmentRecipient {
+  id String @id @default(cuid())
+  assignmentId String
+  assignment Assignment @relation(fields:[assignmentId], references:[id])
+  studentId String
+  student User @relation(fields:[studentId], references:[id])
+  createdAt DateTime @default(now())
+  @@unique([assignmentId,studentId])
+}
+model Submission {
+  id String @id @default(cuid())
+  assignmentId String
+  assignment Assignment @relation(fields:[assignmentId], references:[id])
+  studentId String
+  student User @relation(fields:[studentId], references:[id])
+  attempts SubmissionAttempt[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([assignmentId,studentId])
+}
+model SubmissionAttempt {
+  id String @id @default(cuid())
+  studentId String
+  questionId String
+  roundNo Int
+  questionSnapshot String @default("")
+  submissionId String
+  submission Submission @relation(fields:[submissionId], references:[id])
+  attemptNo Int
+  version Int @default(0)
+  status String @default("DRAFT")
+  text String @default("")
+  answerType String @default("text")
+  studentAnnotations String @default("[]")
+  annotationsVersion Int @default(0)
+  extractedText String @default("")
+  processingMessage String @default("")
+  submittedAt DateTime?
+  revisionReason String?
+  revisionRequirements String?
+  revisionDueAt DateTime?
+  attachments Attachment[]
+  aiGrade AIGrade?
+  review TeacherReview?
+  finalGrade FinalGrade?
+  job GradingJob?
+  ocrResult OCRResult?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([submissionId,attemptNo])
+  @@unique([studentId,questionId,roundNo])
+  @@index([status])
+}
+model Attachment {
+  id String @id @default(cuid())
+  attemptId String
+  attempt SubmissionAttempt @relation(fields:[attemptId], references:[id])
+  filePath String
+  fileName String
+  mimeType String
+  size Int
+  checksum String
+  position Int @default(0)
+  createdAt DateTime @default(now())
+  @@index([checksum])
+}
+model GradingJob {
+  id String @id @default(cuid())
+  attemptId String @unique
+  attempt SubmissionAttempt @relation(fields:[attemptId], references:[id])
+  status String @default("QUEUED")
+  leaseUntil DateTime?
+  tries Int @default(0)
+  error String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([status,leaseUntil])
+}
+model AIGrade {
+  id String @id @default(cuid())
+  attemptId String @unique
+  attempt SubmissionAttempt @relation(fields:[attemptId], references:[id])
+  model String
+  estimatedScore Float
+  confidence Float
+  resultJson String
+  rawResponse String
+  annotations AIAnnotation[]
+  createdAt DateTime @default(now())
+}
+model AIAnnotation {
+  id String @id @default(cuid())
+  gradeId String
+  grade AIGrade @relation(fields:[gradeId], references:[id])
+  startOffset Int
+  endOffset Int
+  selectedText String
+  category String
+  severity String
+  comment String
+  suggestion String
+  createdAt DateTime @default(now())
+}
+model TeacherReview {
+  id String @id @default(cuid())
+  attemptId String @unique
+  attempt SubmissionAttempt @relation(fields:[attemptId], references:[id])
+  teacherId String
+  teacher User @relation(fields:[teacherId], references:[id])
+  version Int @default(1)
+  finalScore Float
+  summary String
+  strengths String @default("")
+  weaknesses String @default("")
+  nextFocus String @default("")
+  recommendedResources String @default("")
+  internalNote String @default("")
+  pageAnnotations String @default("[]")
+  annotations TeacherAnnotation[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model TeacherAnnotation {
+  id String @id @default(cuid())
+  reviewId String
+  review TeacherReview @relation(fields:[reviewId], references:[id], onDelete:Cascade)
+  startOffset Int
+  endOffset Int
+  selectedText String
+  category String
+  severity String
+  comment String
+  suggestion String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model FinalGrade {
+  id String @id @default(cuid())
+  attemptId String @unique
+  attempt SubmissionAttempt @relation(fields:[attemptId], references:[id])
+  status String @default("PUBLISHED")
+  finalScore Float
+  feedbackJson String
+  publishedBy String
+  publishedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model Notification {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId], references:[id])
+  title String
+  assignmentId String
+  readAt DateTime?
+  createdAt DateTime @default(now())
+}
+model AuditLog {
+  id String @id @default(cuid())
+  actorId String?
+  action String
+  targetId String?
+  detail String @default("")
+  createdAt DateTime @default(now())
+  @@index([createdAt])
+}
+model SystemSetting {
+  id String @id
+  value String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+// Reserved class relationships for the next phase. Phase one assigns students directly.
+model Class {
+  id String @id @default(cuid())
+  name String
+  teacherId String
+  members ClassMember[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model ClassMember {
+  id String @id @default(cuid())
+  classId String
+  class Class @relation(fields:[classId], references:[id])
+  userId String
+  user User @relation(fields:[userId], references:[id])
+  createdAt DateTime @default(now())
+  @@unique([classId,userId])
+}
+
+model ScoringPoint {
+  id String @id @default(cuid())
+  questionId String
+  question Question @relation(fields:[questionId], references:[id], onDelete:Cascade)
+  label String
+  description String @default("")
+  points Float
+  position Int
+}
+model Permission {
+  id String @id @default(cuid())
+  studentId String
+  questionId String
+  teacherId String
+  source String @default("MANUAL")
+  revokedAt DateTime?
+  referenceUnlocked Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([studentId,questionId])
+  @@index([teacherId])
+}
+model PermissionPackage {
+  id String @id @default(cuid())
+  teacherId String
+  name String
+  description String @default("")
+  questionIds String @default("[]")
+  courseIds String @default("[]")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model RedemptionCode {
+  id String @id @default(cuid())
+  teacherId String
+  packageId String
+  label String
+  codeHash String @unique
+  maxUses Int @default(1)
+  uses Int @default(0)
+  bindFirstUser Boolean @default(true)
+  boundStudentId String?
+  expiresAt DateTime
+  disabled Boolean @default(false)
+  redemptions RedemptionUse[]
+  createdAt DateTime @default(now())
+}
+model RedemptionUse {
+  id String @id @default(cuid())
+  codeId String
+  code RedemptionCode @relation(fields:[codeId], references:[id])
+  studentId String
+  createdAt DateTime @default(now())
+  @@unique([codeId,studentId])
+}
+model Course {
+  id String @id @default(cuid())
+  teacherId String
+  name String
+  description String @default("")
+  permissions CoursePermission[]
+  createdAt DateTime @default(now())
+}
+model CoursePermission {
+  id String @id @default(cuid())
+  courseId String
+  course Course @relation(fields:[courseId], references:[id])
+  studentId String
+  teacherId String
+  source String @default("MANUAL")
+  note String @default("")
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([courseId,studentId])
+}
+model OCRResult {
+  id String @id @default(cuid())
+  attemptId String @unique
+  attempt SubmissionAttempt @relation(fields:[attemptId], references:[id])
+  status String
+  text String @default("")
+  error String @default("")
+  createdAt DateTime @default(now())
+}

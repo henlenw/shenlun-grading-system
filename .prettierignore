@@ -1,0 +1,8 @@
+node_modules
+**/node_modules
+**/.next
+**/dist
+test-results
+storage
+MASTER_SPEC.md
+pnpm-lock.yaml

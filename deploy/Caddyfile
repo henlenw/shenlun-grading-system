@@ -1,0 +1,12 @@
+{$SITE_DOMAIN} {
+    encode gzip
+    request_body {
+        max_size 12MB
+    }
+    handle /api/* {
+        reverse_proxy backend:4000
+    }
+    handle {
+        reverse_proxy teacher:3000
+    }
+}

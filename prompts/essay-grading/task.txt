@@ -1,0 +1,1 @@
+检查任务完成、要点命中、材料运用、逻辑与结构、语言和字数。若 question.scoringPoints 非空，pointAssessments 必须逐项返回原始 pointId（对应 id）和 label，不得遗漏、重复或新增要点。每项标记 HIT（完全命中，得满分）、PARTIAL（部分命中，0 与满分之间）、MISS（未命中，0 分），包含 awarded、原文证据 evidence、原因 reason。estimatedScore 必须等于各项 awarded 之和且不超过 maxScore。参考答案和评分标准优先；不得另设隐含扣分项。没有得分点时根据 rubric 作参考评分并说明局限。建议须可操作。AI 结果仅为教师待审草稿。
